@@ -1,13 +1,12 @@
-# CPU:
-# !pip install pydub torch==1.7.0+cpu torchvision==0.8.1+cpu torchaudio==0.7.0 -f https://download.pytorch.org/whl/torch_stable.html
-
-# GPU:
-# !pip install pydub torch==1.7.0+cu101 torchvision==0.8.1+cu101 torchaudio==0.7.0 -f https://download.pytorch.org/whl/torch_stable.html
-
-
+"""
+Barry Yu
+Dec 28, 2023
+Pytorch Speech Classification
+"""
 # ==================== IMPORTS ====================
 
 # import packages
+# IMPORTANT: make sure torch and torchaudio are 2.0.0
 
 import torch
 import torch.nn as nn
@@ -45,8 +44,55 @@ class SubsetSC(SPEECHCOMMANDS):
             self._walker = [w for w in self._walker if w not in excludes]
 
 
+LABELS = [
+    'backward', 'bed', 'bird', 'cat', 'dog', 'down', 'eight',
+    'five', 'follow', 'forward', 'four', 'go', 'happy', 'house',
+    'learn', 'left', 'marvin', 'nine', 'no', 'off', 'on',
+    'one', 'right', 'seven', 'sheila', 'six', 'stop', 'three',
+    'tree', 'two', 'up', 'visual', 'wow', 'yes', 'zero'
+]
+
 # Create training and testing split of the data. We do not use validation in this tutorial.
 train_set = SubsetSC("training")
 test_set = SubsetSC("testing")
 
 waveform, sample_rate, label, speaker_id, utterance_number = train_set[0]
+
+print("Shape of waveform: {}".format(waveform.size()))
+print("Sample rate of waveform: {}".format(sample_rate))
+
+# plt.plot(waveform.t().numpy())
+# plt.show()
+# labels = sorted(list(set(datapoint[2] for datapoint in train_set)))
+# print(labels)
+
+
+# ==================== FORMATTING DATA ====================
+
+# downsample the audio (lower resolution)
+new_sample_rate = 8000
+transform = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=new_sample_rate)
+transformed = transform(waveform)
+
+
+# encode each word as an index in LABELS
+def label_to_index(_word):
+    """
+    # Return the position of the word in labels
+    """
+    return torch.tensor(LABELS.index(_word))
+
+
+def index_to_label(_index):
+    """
+    Return the word corresponding to the index in labels
+    This is the inverse of label_to_index
+    """
+    return LABELS[_index]
+
+
+word_start = "no"
+index = label_to_index(word_start)
+word_recovered = index_to_label(index)
+
+print(word_start, "-->", index, "-->", word_recovered)
