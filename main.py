@@ -244,3 +244,18 @@ with tqdm(total=n_epoch) as pbar:
 # Let's plot the training loss versus the number of iteration.
 # plt.plot(losses);
 # plt.title("training loss");
+
+def predict(tensor):
+    # Use the model to predict the label of the waveform
+    tensor = tensor.to(DEVICE)
+    tensor = transform(tensor)
+    tensor = model(tensor.unsqueeze(0))
+    tensor = get_likely_index(tensor)
+    tensor = index_to_label(tensor.squeeze())
+    return tensor
+
+
+waveform, sample_rate, utterance, *_ = train_set[-1]
+ipd.Audio(waveform.numpy(), rate=sample_rate)
+
+print(f"Expected: {utterance}. Predicted: {predict(waveform)}.")
